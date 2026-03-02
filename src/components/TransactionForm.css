@@ -18,14 +18,46 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    padding-top: 50px;
+    /* Space for fixed header */
+}
+
+.form-header-simple {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    border-bottom: 1px solid #EEE;
+    background: white;
+}
+
+.form-header-simple h2 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.back-home-btn {
+    position: absolute;
+    left: 1rem;
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .form-tabs-top {
     display: flex;
-    background-color: #EEE;
-    padding: 4px;
-    border-radius: 8px;
-    margin: 1rem;
+    background-color: #F0F0F0;
+    padding: 3px;
+    border-radius: 10px;
+    margin: 0.75rem 1rem;
     position: relative;
 }
 
@@ -117,18 +149,18 @@
 }
 
 .category-section h3 {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #999;
-    margin: 1rem 0;
+    margin: 0.75rem 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .category-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    padding-bottom: 2rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    padding-bottom: 1.5rem;
 }
 
 .cat-btn {
@@ -139,9 +171,9 @@
 }
 
 .cat-icon-wrap {
-    width: 55px;
-    height: 55px;
-    border-radius: 18px;
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -177,16 +209,16 @@
 }
 
 .main-action-btn {
-    width: calc(100% - 2rem);
-    margin: 1rem;
-    background-color: #FF9800;
+    width: calc(100% - 1.5rem);
+    margin: 0.75rem;
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    padding: 1rem;
-    border-radius: 25px;
-    font-size: 1.1rem;
+    padding: 0.85rem;
+    border-radius: 15px;
+    font-size: 1rem;
     font-weight: 700;
-    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
 }
 
 .keypad-grid {

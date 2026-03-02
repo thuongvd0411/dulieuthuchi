@@ -76,9 +76,8 @@ header {
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 0.75rem;
   padding-bottom: 80px;
-  /* Space for bottom nav */
 }
 
 /* Summary Card Modern */
@@ -86,8 +85,8 @@ header {
   background: linear-gradient(135deg, #FFF9F0, #FFF);
   border: 1px solid #FFE0B2;
   border-radius: 16px;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
 .month-display {
@@ -117,7 +116,7 @@ header {
 
 .stat-item p {
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 0.9rem;
   margin-top: 4px;
 }
 
@@ -300,8 +299,8 @@ header {
   justify-content: space-between;
   align-items: center;
   background-color: #FFF9F0;
-  padding: 8px 1rem;
-  margin: 10px 1rem;
+  padding: 6px 1rem;
+  margin: 5px 0.75rem;
   border-radius: 10px;
   border: 1px solid #FFE0B2;
 }
