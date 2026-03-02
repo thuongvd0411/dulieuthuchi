@@ -95,6 +95,9 @@ function Auth({ onLogin }) {
                         <button type="button" className="btn-back" onClick={() => setStep(1)}>Quay lại</button>
                     </form>
                 )}
+                <div className="auth-footer">
+                    build by thuongvd & alla | v5.9
+                </div>
             </div>
         </div>
     );
