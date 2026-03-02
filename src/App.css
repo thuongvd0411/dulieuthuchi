@@ -179,6 +179,121 @@ header {
   color: var(--expense-color);
 }
 
+/* Changelog Styles */
+.changelog-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 2rem;
+}
+
+.changelog-header .back-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--primary-color);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.changelog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  border-left: 2px solid #EEE;
+  padding-left: 20px;
+  margin-left: 10px;
+}
+
+.changelog-item {
+  position: relative;
+}
+
+.changelog-item::before {
+  content: '';
+  position: absolute;
+  left: -27px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px #EEE;
+}
+
+.ver-tag {
+  display: inline-block;
+  background: var(--primary-color);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.changelog-item h4 {
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.changelog-item h4 span {
+  font-size: 0.75rem;
+  color: #999;
+  font-weight: 400;
+  margin-left: 5px;
+}
+
+.changelog-item ul {
+  list-style: none;
+}
+
+.changelog-item ul li {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 6px;
+  padding-left: 15px;
+  position: relative;
+}
+
+.changelog-item ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
+}
+
+.info-box.clickable {
+  cursor: pointer;
+  background: #FFF9F0;
+  border: 1px solid #FFE0B2;
+}
+
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.badge {
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.btn-danger-lite {
+  width: 100%;
+  padding: 1rem;
+  border: 1px dashed #FFCDD2;
+  background: #FFFBFC;
+  border-radius: 12px;
+  font-weight: 700;
+  color: #D32F2F;
+  cursor: pointer;
+}
+
 /* Month Picker Bar */
 .month-picker-bar {
   display: flex;
