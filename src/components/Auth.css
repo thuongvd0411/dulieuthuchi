@@ -107,7 +107,45 @@
     border-color: var(--primary-color);
 }
 
-.auth-card button {
+.auth-tabs {
+    display: flex;
+    background: #F5F5F5;
+    padding: 4px;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.auth-tabs button {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #999;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.auth-tabs button.active {
+    background: white;
+    color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.auth-error {
+    background: #FFEBEB;
+    color: #D32F2F;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #FFCDD2;
+    text-align: center;
+}
+
+.btn-main {
     width: 100%;
     padding: 1rem;
     background-color: var(--primary-color);
@@ -117,5 +155,5 @@
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
 }

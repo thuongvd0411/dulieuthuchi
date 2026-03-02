@@ -4,47 +4,59 @@ import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 function Auth({ onLogin }) {
+    const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
     const [loginID, setLoginID] = useState('');
     const [displayName, setDisplayName] = useState('');
-    const [step, setStep] = useState(1); // 1: Check ID, 2: Register Name
     const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
 
-    const checkAccount = async (e) => {
+    const normalizeID = (id) => id.trim().toLowerCase();
+
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (!loginID.trim()) return;
+        const id = normalizeID(loginID);
+        if (!id) return;
 
         setLoading(true);
+        setErrorMsg('');
         try {
-            const userRef = doc(db, "users", loginID.trim().toLowerCase());
+            const userRef = doc(db, "users", id);
             const userSnap = await getDoc(userRef);
 
             if (userSnap.exists()) {
                 const data = userSnap.data();
-                onLogin(loginID.trim().toLowerCase(), data.displayName);
+                onLogin(id, data.displayName);
             } else {
-                setStep(2);
+                setErrorMsg('Tài khoản không tồn tại. Vui lòng kiểm tra lại hoặc chọn "Đăng ký".');
             }
         } catch (error) {
-            alert("Lỗi kết nối: " + error.message);
+            setErrorMsg("Lỗi kết nối: " + error.message);
         }
         setLoading(false);
     };
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        if (!displayName.trim()) return;
+        const id = normalizeID(loginID);
+        if (!id || !displayName.trim()) return;
 
         setLoading(true);
+        setErrorMsg('');
         try {
-            const id = loginID.trim().toLowerCase();
-            const name = displayName.trim();
-            await setDoc(doc(db, "users", id), {
-                displayName: name,
-                createdAt: new Date()
-            });
-            onLogin(id, name);
+            const userRef = doc(db, "users", id);
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+                setErrorMsg('Tên đăng nhập này đã có người sử dụng. Vui lòng chọn tên khác.');
+            } else {
+                await setDoc(userRef, {
+                    displayName: displayName.trim(),
+                    createdAt: new Date()
+                });
+                onLogin(id, displayName.trim());
+            }
         } catch (error) {
-            alert("Lỗi đăng ký: " + error.message);
+            setErrorMsg("Lỗi đăng ký: " + error.message);
         }
         setLoading(false);
     };
@@ -56,8 +68,25 @@ function Auth({ onLogin }) {
                 <h1>Xin chào!</h1>
                 <p>Vui lòng thiết lập tài khoản của anh</p>
 
-                {step === 1 ? (
-                    <form onSubmit={checkAccount}>
+                <div className="auth-tabs">
+                    <button
+                        className={authMode === 'login' ? 'active' : ''}
+                        onClick={() => { setAuthMode('login'); setErrorMsg(''); }}
+                    >
+                        Đăng nhập
+                    </button>
+                    <button
+                        className={authMode === 'register' ? 'active' : ''}
+                        onClick={() => { setAuthMode('register'); setErrorMsg(''); }}
+                    >
+                        Đăng ký
+                    </button>
+                </div>
+
+                {errorMsg && <div className="auth-error">{errorMsg}</div>}
+
+                {authMode === 'login' ? (
+                    <form onSubmit={handleLogin}>
                         <div className="input-group-auth">
                             <label>Tên đăng nhập</label>
                             <input
@@ -69,34 +98,40 @@ function Auth({ onLogin }) {
                                 autoFocus
                             />
                         </div>
-                        <button type="submit" disabled={loading}>
-                            {loading ? 'Đang kiểm tra...' : 'Tiếp tục'}
+                        <button type="submit" disabled={loading} className="btn-main">
+                            {loading ? 'Đang kiểm tra...' : 'Đăng nhập ngay'}
                         </button>
                     </form>
                 ) : (
                     <form onSubmit={handleRegister}>
-                        <div className="welcome-msg">
-                            Tài khoản <b>{loginID}</b> là thành viên mới! ✨
+                        <div className="input-group-auth">
+                            <label>Tên đăng nhập mới</label>
+                            <input
+                                type="text"
+                                placeholder="Ví dụ: thuongvd0411"
+                                value={loginID}
+                                onChange={(e) => setLoginID(e.target.value)}
+                                required
+                            />
                         </div>
                         <div className="input-group-auth">
                             <label>Tên hiển thị (Nickname)</label>
                             <input
                                 type="text"
-                                placeholder="Ví dụ: Anh Thưởng..."
+                                placeholder="Ví dụ: Anh Thưởng"
                                 value={displayName}
                                 onChange={(e) => setDisplayName(e.target.value)}
                                 required
-                                autoFocus
                             />
                         </div>
-                        <button type="submit" disabled={loading}>
-                            {loading ? 'Đang khởi tạo...' : 'Bắt đầu dùng ngay'}
+                        <button type="submit" disabled={loading} className="btn-main">
+                            {loading ? 'Đang khởi tạo...' : 'Tạo tài khoản mới'}
                         </button>
-                        <button type="button" className="btn-back" onClick={() => setStep(1)}>Quay lại</button>
                     </form>
                 )}
+
                 <div className="auth-footer">
-                    build by thuongvd & alla | v5.9
+                    build by thuongvd & alla | v6.0
                 </div>
             </div>
         </div>
