@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './App.css';
 import { db } from './firebase';
 import { collection, query, onSnapshot, addDoc, serverTimestamp, where, deleteDoc, getDocs } from 'firebase/firestore';
@@ -14,10 +14,14 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
+  // Date selection state
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const currentMonth = selectedDate.getMonth();
+  const currentYear = selectedDate.getFullYear();
+
   useEffect(() => {
     if (!loginID) return;
     setLoading(true);
-    // Simple query WITHOUT orderby and where on different fields to avoid index requirement
     const q = query(
       collection(db, "transactions"),
       where("userId", "==", loginID)
@@ -33,13 +37,20 @@ function App() {
           date: data.date?.toDate() || new Date()
         });
       });
-      // Client-side sorting for DESC date
       transData.sort((a, b) => b.date - a.date);
       setTransactions(transData);
       setLoading(false);
     });
     return () => unsubscribe();
   }, [loginID]);
+
+  // Filtered transactions for the selected month
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t =>
+      t.date.getMonth() === currentMonth &&
+      t.date.getFullYear() === currentYear
+    );
+  }, [transactions, currentMonth, currentYear]);
 
   const handleLogin = (id, name) => {
     localStorage.setItem('expense_login_id', id);
@@ -57,14 +68,9 @@ function App() {
     }
   };
 
-  const clearData = async () => {
-    if (window.confirm("Xóa HẾT dữ liệu của anh trên mây? Thao tác này không thể hoàn tác!")) {
-      const q = query(collection(db, "transactions"), where("userId", "==", loginID));
-      const snapshot = await getDocs(q);
-      const batch = snapshot.docs.map(doc => deleteDoc(doc.ref));
-      await Promise.all(batch);
-      alert("Đã xóa sạch dữ liệu ạ!");
-    }
+  const changeMonth = (offset) => {
+    const nextDate = new Date(currentYear, currentMonth + offset, 1);
+    setSelectedDate(nextDate);
   };
 
   const handleSaveTransaction = async (data) => {
@@ -83,13 +89,8 @@ function App() {
 
   if (!loginID) return <Auth onLogin={handleLogin} />;
 
-  // Filter for current month
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
   // Grouping for Ledger
-  const groupedTransactions = transactions.reduce((groups, trans) => {
+  const groupedTransactions = filteredTransactions.reduce((groups, trans) => {
     const dateStr = trans.date.toLocaleDateString('vi-VN');
     if (!groups[dateStr]) groups[dateStr] = [];
     groups[dateStr].push(trans);
@@ -100,55 +101,74 @@ function App() {
   const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
   const days = [...Array(getDaysInMonth(currentMonth, currentYear))].map((_, i) => {
     const day = i + 1;
-    const dayTrans = transactions.filter(t => t.date.getDate() === day && t.date.getMonth() === currentMonth && t.date.getFullYear() === currentYear);
+    const dayTrans = filteredTransactions.filter(t => t.date.getDate() === day);
     const income = dayTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const expense = dayTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
     return { day, income, expense };
   });
 
-  const totalIncome = transactions.filter(t => t.date.getMonth() === currentMonth && t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const totalExpense = transactions.filter(t => t.date.getMonth() === currentMonth && t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const totalIncome = filteredTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpense = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+  // Category summary for Report
+  const catSummary = filteredTransactions.filter(t => t.type === 'expense').reduce((acc, t) => {
+    if (!acc[t.category]) {
+      acc[t.category] = { amount: 0, icon: t.icon, color: t.color, name: t.category };
+    }
+    acc[t.category].amount += t.amount;
+    return acc;
+  }, {});
+  const sortedCats = Object.values(catSummary).sort((a, b) => b.amount - a.amount);
 
   return (
     <div className="container">
       <header>
         <div className="user-info-bar">
           <div className="user-greet">
-            <span>Chào mừng, <b>{displayName}</b> 🐷</span>
-            <small>ID: {loginID}</small>
+            <span>Chào, <b>{displayName}</b> 🐷</span>
+            <small>@{loginID}</small>
           </div>
           <div className="header-actions">
-            <button className="sync-btn" onClick={() => window.location.reload()} title="Đồng bộ">🔄</button>
+            <button className="sync-btn" onClick={() => window.location.reload()}>🔄</button>
             <button className="settings-btn" onClick={() => setActiveTab('settings')}>⚙️</button>
           </div>
         </div>
       </header>
 
+      {/* Month Picker Shell */}
+      <div className="month-picker-bar">
+        <button onClick={() => changeMonth(-1)}>‹</button>
+        <div className="current-month-label">
+          {currentMonth + 1 < 10 ? `0${currentMonth + 1}` : currentMonth + 1}/{currentYear}
+          <small>({getDaysInMonth(currentMonth, currentYear)} ngày)</small>
+        </div>
+        <button onClick={() => changeMonth(1)}>›</button>
+      </div>
+
       <main className="content">
         {activeTab === 'ledger' && (
           <div className="ledger-view">
             <div className="summary-card-modern">
-              <div className="month-display">Tháng 0{currentMonth + 1}/{currentYear}</div>
               <div className="stat-grid">
-                <div className="stat-item income">
-                  <label>Thu nhập</label>
-                  <p>+{totalIncome.toLocaleString()}</p>
-                </div>
                 <div className="stat-item expense">
                   <label>Chi tiêu</label>
-                  <p>-{totalExpense.toLocaleString()}</p>
+                  <p>-{totalExpense.toLocaleString()}đ</p>
+                </div>
+                <div className="stat-item income">
+                  <label>Thu nhập</label>
+                  <p>+{totalIncome.toLocaleString()}đ</p>
                 </div>
                 <div className="stat-item balance">
-                  <label>Còn lại</label>
-                  <p>{(totalIncome - totalExpense).toLocaleString()}</p>
+                  <label>Thu chi</label>
+                  <p>{(totalIncome - totalExpense >= 0 ? '+' : '')}{(totalIncome - totalExpense).toLocaleString()}đ</p>
                 </div>
               </div>
             </div>
 
-            {loading ? <p className="center-msg">🔄 Đang tải dữ liệu...</p> : transactions.length === 0 ?
+            {loading ? <p className="center-msg">🔄 Đang tải...</p> : filteredTransactions.length === 0 ?
               <div className="empty-state">
                 <div className="icon">🐷</div>
-                <p>Chưa có dữ liệu nào.<br />Nhấn (+) để bắt đầu ghi chép!</p>
+                <p>Chưa có dữ liệu tháng này.</p>
               </div> :
               Object.keys(groupedTransactions).map(dateStr => (
                 <div key={dateStr} className="day-group">
@@ -159,12 +179,8 @@ function App() {
                       <span className="year-text">{dateStr.split('/')[2]}</span>
                     </div>
                     <div className="day-total-summary">
-                      {groupedTransactions[dateStr].some(t => t.type === 'expense') &&
-                        <span className="neg">-{groupedTransactions[dateStr].filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0).toLocaleString()}</span>
-                      }
-                      {groupedTransactions[dateStr].some(t => t.type === 'income') &&
-                        <span className="pos">+{groupedTransactions[dateStr].filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0).toLocaleString()}</span>
-                      }
+                      <span className="neg">-{groupedTransactions[dateStr].filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0).toLocaleString()}</span>
+                      <span className="pos">+{groupedTransactions[dateStr].filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0).toLocaleString()}</span>
                     </div>
                   </div>
                   {groupedTransactions[dateStr].map(t => (
@@ -175,7 +191,7 @@ function App() {
                           <span className="cat">{t.category}</span>
                           <span className={`amount ${t.type}`}>{t.type === 'expense' ? '-' : '+'}{t.amount.toLocaleString()}</span>
                         </div>
-                        <div className="note">{t.note || '-'}</div>
+                        <div className="note">{t.note}</div>
                       </div>
                     </div>
                   ))}
@@ -187,57 +203,71 @@ function App() {
 
         {activeTab === 'calendar' && (
           <div className="calendar-view">
-            <div className="calendar-header-title">Lịch chi tiêu 0{currentMonth + 1}/{currentYear}</div>
             <div className="calendar-grid">
               {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map(d => <div key={d} className="cal-weekday">{d}</div>)}
-              {/* Empty days before 1st of month - simplified */}
               {[...Array(new Date(currentYear, currentMonth, 1).getDay())].map((_, i) => <div key={i} className="cal-day empty"></div>)}
               {days.map(d => (
                 <div key={d.day} className={`cal-day ${d.income || d.expense ? 'has-data' : ''}`}>
                   <span className="day-num">{d.day}</span>
                   <div className="day-amounts">
-                    {d.income > 0 && <span className="pos">{Math.round(d.income / 1000)}k</span>}
-                    {d.expense > 0 && <span className="neg">{Math.round(d.expense / 1000)}k</span>}
+                    {d.income > 0 && <span className="pos">+{Math.round(d.income / 1000)}k</span>}
+                    {d.expense > 0 && <span className="neg">-{Math.round(d.expense / 1000)}k</span>}
                   </div>
                 </div>
               ))}
             </div>
-            <div className="calendar-meta">
-              <p>* Đơn vị: nghìn đồng (k)</p>
-            </div>
+            <p className="unit-label">* Đơn vị: nghìn đồng (k)</p>
           </div>
         )}
 
         {activeTab === 'report' && (
           <div className="report-view-modern">
-            <h2>Báo cáo chi tiêu</h2>
-            <div className="donut-container">
-              <div className="donut-chart" style={{ background: `conic-gradient(var(--primary-color) 0% 70%, #EEE 70% 100%)` }}>
-                <div className="inner">
-                  <label>Tổng chi</label>
-                  <p>{totalExpense.toLocaleString()}đ</p>
+            <div className="report-header-stats">
+              <div className="stat"><span>Chi tiêu</span><p className="neg">-{totalExpense.toLocaleString()}đ</p></div>
+              <div className="stat"><span>Thu nhập</span><p className="pos">+{totalIncome.toLocaleString()}đ</p></div>
+              <div className="stat"><span>Tổng cộng</span><p>{(totalIncome - totalExpense).toLocaleString()}đ</p></div>
+            </div>
+
+            <div className="donut-section">
+              <div className="donut-chart-complex">
+                <div className="inner-label">
+                  <small>Chi tiêu</small>
+                  <strong>{totalExpense.toLocaleString()}</strong>
                 </div>
+                {/* Simplified CSS Pie Chart for demonstration */}
+                <div className="donut-segments"></div>
               </div>
             </div>
-            <p className="center-msg-small">Phân tích hạng mục sắp ra mắt!</p>
+
+            <div className="report-cat-list">
+              {sortedCats.map(cat => (
+                <div key={cat.name} className="report-cat-item">
+                  <div className="cat-icon-sm" style={{ backgroundColor: cat.color + '15' }}>{cat.icon}</div>
+                  <div className="cat-name-wrap">
+                    <span className="name">{cat.name}</span>
+                    <span className="percent">{Math.round((cat.amount / totalExpense) * 100)}%</span>
+                  </div>
+                  <div className="cat-amount-wrap">
+                    <span className="val">{cat.amount.toLocaleString()}đ</span>
+                    <span className="arrow">›</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {activeTab === 'settings' && (
           <div className="settings-view-modern">
             <div className="section">
-              <h3>Tài khoản</h3>
+              <h3>Tài khoản của anh</h3>
               <div className="info-box">
-                <p>Tên đăng nhập: <b>{loginID}</b></p>
-                <p>Tên hiển thị: <b>{displayName}</b></p>
+                <p>👤 {displayName}</p>
+                <p>🆔 {loginID}</p>
               </div>
-              <button className="btn-secondary" onClick={handleLogout}>Đăng xuất / Đổi tên</button>
+              <button className="btn-secondary" onClick={handleLogout}>Đổi tài khoản đăng nhập</button>
             </div>
-            <div className="section">
-              <h3>Dữ liệu</h3>
-              <button className="btn-danger" onClick={clearData}>Xóa toàn bộ dữ liệu trên Cloud</button>
-            </div>
-            <p className="footer-credits">Alla Finance v5.5<br />Dành cho di động</p>
+            <p className="footer-credits">Alla Finance v5.8<br />🐷🧡</p>
           </div>
         )}
       </main>
@@ -245,7 +275,7 @@ function App() {
       <nav className="bottom-nav">
         <div className={`nav-item ${activeTab === 'ledger' ? 'active' : ''}`} onClick={() => setActiveTab('ledger')}>
           <span className="icon">📋</span>
-          <span className="label">Hàng tháng</span>
+          <span className="label">Nhập vào</span>
         </div>
         <div className={`nav-item ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>
           <span className="icon">📅</span>
