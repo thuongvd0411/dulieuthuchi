@@ -131,7 +131,7 @@ function Auth({ onLogin }) {
                 )}
 
                 <div className="auth-footer">
-                    build by thuongvd & alla | v6.0
+                    build by thuongvd & alla | v6.1
                 </div>
             </div>
         </div>
