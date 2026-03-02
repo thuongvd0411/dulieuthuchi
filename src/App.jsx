@@ -7,6 +7,17 @@ import Auth from './components/Auth';
 
 const CHANGELOG = [
   {
+    version: 'v6.2',
+    date: '02/03/2026',
+    title: 'Đại tu Giao diện Di động',
+    updates: [
+      'Nén kích thước Bộ chọn tháng và Thẻ tóm tắt cho gọn gàng.',
+      'Tái cấu trúc Header Form nhập liệu chuyên nghiệp hơn.',
+      'Tăng mật độ hiển thị hạng mục (4 cột) trên màn hình nhỏ.',
+      'Tinh chỉnh lại Keypad và các nút bấm cho vừa vặn.'
+    ]
+  },
+  {
     version: 'v6.1',
     date: '02/03/2026',
     title: 'Sửa lỗi Auth & Tối ưu di động',
@@ -341,7 +352,7 @@ function App() {
                   <div className="info-box clickable" onClick={() => setShowChangelog(true)}>
                     <div className="row-between">
                       <span>Nhật ký cập nhật</span>
-                      <span className="badge">v6.1 ›</span>
+                      <span className="badge">v6.2 ›</span>
                     </div>
                   </div>
                   <div className="info-box">
