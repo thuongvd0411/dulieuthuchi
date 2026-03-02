@@ -22,13 +22,16 @@ function TransactionForm({ onSave, onCancel, customCategories = [] }) {
     const [note, setNote] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
-    const allCategories = [...defaultCategories, ...customCategories].filter(c => c.type === formType);
-    const [selectedCat, setSelectedCat] = useState(allCategories[0]);
+    const [allCats, setAllCats] = useState([...defaultCategories]);
+    const currentCats = allCats.filter(c => c.type === formType);
+    const [selectedCat, setSelectedCat] = useState(currentCats[0]);
 
-    // Sync selected category when tab changes
+    const [showAddCat, setShowAddCat] = useState(false);
+    const [newCatName, setNewCatName] = useState('');
+
     useEffect(() => {
-        setSelectedCat(allCategories[0]);
-    }, [formType]);
+        setSelectedCat(allCats.find(c => c.type === formType));
+    }, [formType, allCats]);
 
     const handleKeyPress = (num) => {
         if (amount === '0') setAmount(num);
@@ -40,56 +43,88 @@ function TransactionForm({ onSave, onCancel, customCategories = [] }) {
         else setAmount(prev => prev.slice(0, -1));
     };
 
+    const handleAddCategory = () => {
+        if (!newCatName.trim()) return;
+        const newCat = {
+            id: 'custom_' + Date.now(),
+            name: newCatName,
+            icon: '✨',
+            type: formType,
+            color: formType === 'expense' ? '#FF9800' : '#4CAF50'
+        };
+        setAllCats(prev => [...prev, newCat]);
+        setNewCatName('');
+        setShowAddCat(false);
+    };
+
     const handleSave = () => {
         if (Number(amount) === 0) return;
         onSave({
             amount: Number(amount),
-            category: selectedCat.name,
-            icon: selectedCat.icon,
-            color: selectedCat.color,
+            category: selectedCat?.name || 'Khác',
+            icon: selectedCat?.icon || '💰',
+            color: selectedCat?.color || '#999',
             type: formType,
             note,
-            date: new Date(date)
+            date: new Date(date),
+            customCategories: allCats.filter(c => c.id.startsWith('custom_'))
         });
     };
 
     return (
         <div className="form-overlay">
             <div className="form-container">
+                <div className="form-header-simple">
+                    <button className="back-home-btn" onClick={onCancel}>✕ Thoát</button>
+                    <h2>{formType === 'expense' ? 'Ghi khoản chi' : 'Ghi khoản thu'}</h2>
+                    <span></span>
+                </div>
+
                 <div className="form-tabs-top">
-                    <div className={`form-tab-item ${formType === 'expense' ? 'active expense' : ''}`} onClick={() => setFormType('expense')}>Tiền chi</div>
-                    <div className={`form-tab-item ${formType === 'income' ? 'active income' : ''}`} onClick={() => setFormType('income')}>Tiền thu</div>
-                    <div className="edit-icon" onClick={() => alert('Chức năng chỉnh sửa danh mục sắp ra mắt!')}>✎</div>
+                    <div className={`form-tab-item ${formType === 'expense' ? 'active expense' : ''}`} onClick={() => setFormType('expense')}>Khoản Chi</div>
+                    <div className={`form-tab-item ${formType === 'income' ? 'active income' : ''}`} onClick={() => setFormType('income')}>Khoản Thu</div>
                 </div>
 
                 <div className="form-body-scroll">
-                    <div className="input-row">
-                        <span className="label">Ngày</span>
-                        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="date-input" />
+                    <div className="input-row amount-row-large">
+                        <div className="amount-label">Số tiền</div>
+                        <div className="amount-val-large">
+                            {Number(amount).toLocaleString()} <span className="currency">đ</span>
+                        </div>
                     </div>
 
-                    <div className="input-row">
-                        <span className="label">Ghi chú</span>
-                        <input
-                            type="text"
-                            placeholder="Bạn đã chi vào việc gì?"
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            className="note-input"
-                        />
-                    </div>
-
-                    <div className="input-row amount-row">
-                        <span className="label">Tiền {formType === 'expense' ? 'chi' : 'thu'}</span>
-                        <div className="amount-val">
-                            {Number(amount).toLocaleString()} <span className="currency-symbol">đ</span>
+                    <div className="input-row-flex">
+                        <div className="field">
+                            <label>Ngày</label>
+                            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                        </div>
+                        <div className="field">
+                            <label>Ghi chú</label>
+                            <input type="text" placeholder="Ăn trưa, xăng xe..." value={note} onChange={(e) => setNote(e.target.value)} />
                         </div>
                     </div>
 
                     <div className="category-section">
-                        <h3>Danh mục</h3>
+                        <div className="cat-title-bar">
+                            <h3>Danh mục</h3>
+                            <button className="add-cat-btn" onClick={() => setShowAddCat(true)}>+ Thêm mục</button>
+                        </div>
+
+                        {showAddCat && (
+                            <div className="add-cat-miniform">
+                                <input
+                                    placeholder="Tên hạng mục mới..."
+                                    value={newCatName}
+                                    onChange={(e) => setNewCatName(e.target.value)}
+                                    autoFocus
+                                />
+                                <button onClick={handleAddCategory}>OK</button>
+                                <button className="cancel" onClick={() => setShowAddCat(false)}>Hủy</button>
+                            </div>
+                        )}
+
                         <div className="category-grid">
-                            {allCategories.map(cat => (
+                            {currentCats.map(cat => (
                                 <div
                                     key={cat.id}
                                     className={`cat-btn ${selectedCat?.id === cat.id ? 'active' : ''}`}

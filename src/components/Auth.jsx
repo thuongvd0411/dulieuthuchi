@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import './Auth.css';
 
 function Auth({ onLogin }) {
-    const [username, setUsername] = useState('');
+    const [loginID, setLoginID] = useState(localStorage.getItem('expense_login_id') || '');
+    const [displayName, setDisplayName] = useState(localStorage.getItem('expense_display_name') || '');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (username.trim()) {
-            onLogin(username.trim());
+        if (loginID.trim() && displayName.trim()) {
+            onLogin(loginID.trim(), displayName.trim());
         }
     };
 
@@ -16,15 +17,28 @@ function Auth({ onLogin }) {
             <div className="auth-card">
                 <div className="auth-logo">🐷</div>
                 <h1>Chào mừng anh Thưởng!</h1>
-                <p>Nhập tên người dùng để bắt đầu quản lý chi tiêu</p>
+                <p>Vui lòng thiết lập tài khoản của anh</p>
                 <form onSubmit={handleSubmit}>
-                    <input
-                        type="text"
-                        placeholder="Tên của anh (Vídụ: Thưởng)..."
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        autoFocus
-                    />
+                    <div className="input-group-auth">
+                        <label>Tên đăng nhập (Dùng để login)</label>
+                        <input
+                            type="text"
+                            placeholder="Ví dụ: thuongvd0411"
+                            value={loginID}
+                            onChange={(e) => setLoginID(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="input-group-auth">
+                        <label>Tên hiển thị (Nickname)</label>
+                        <input
+                            type="text"
+                            placeholder="Ví dụ: Anh Thưởng"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            required
+                        />
+                    </div>
                     <button type="submit">Vào ứng dụng</button>
                 </form>
             </div>

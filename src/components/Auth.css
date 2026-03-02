@@ -39,12 +39,26 @@
     margin-bottom: 2rem;
 }
 
+.input-group-auth {
+    text-align: left;
+    margin-bottom: 1rem;
+}
+
+.input-group-auth label {
+    display: block;
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 4px;
+    margin-left: 4px;
+}
+
 .auth-card input {
     width: 100%;
-    padding: 1rem;
+    padding: 0.8rem 1rem;
     border: 2px solid #EEE;
     border-radius: 12px;
-    margin-bottom: 1.5rem;
+    /* margin-bottom: 1.5rem; */
+    /* This line was removed as it's no longer needed with input-group-auth */
     font-size: 1rem;
     outline: none;
     transition: border-color 0.3s;
