@@ -408,19 +408,25 @@ function App() {
                   </div>
                 </div>
                 <div className="report-cat-list">
-                  {sortedCats.map(cat => (
-                    <div key={cat.name} className="report-cat-item" onClick={() => setSelectedGroupForChart(cat.name)} style={{ cursor: 'pointer' }}>
-                      <div className="cat-icon-sm" style={{ backgroundColor: cat.color + '15' }}>{cat.icon}</div>
-                      <div className="cat-name-wrap">
-                        <span className="name">{cat.name}</span>
-                        <span className="percent">{Math.round((cat.amount / totalExpense) * 100)}%</span>
+                  {sortedCats.map(cat => {
+                    const pct = totalExpense > 0 ? Math.round((cat.amount / totalExpense) * 100) : 0;
+                    return (
+                      <div key={cat.name} className="report-cat-item" onClick={() => setSelectedGroupForChart(cat.name)} style={{ cursor: 'pointer' }}>
+                        <div className="cat-icon-sm" style={{ backgroundColor: cat.color + '15' }}>{cat.icon}</div>
+                        <div className="cat-name-wrap">
+                          <span className="name">{cat.name}</span>
+                          <div className="indicator-wrap">
+                            <span className="color-dot" style={{ backgroundColor: cat.color }}></span>
+                            <span className="percent">{pct}%</span>
+                          </div>
+                        </div>
+                        <div className="cat-amount-wrap">
+                          <span className="val">{cat.amount.toLocaleString()}đ</span>
+                          <span className="chev">›</span>
+                        </div>
                       </div>
-                      <div className="cat-amount-wrap">
-                        <span className="val">{cat.amount.toLocaleString()}đ</span>
-                        <span className="chev">›</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}
