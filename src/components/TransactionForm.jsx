@@ -54,7 +54,11 @@ function TransactionForm({ onSave, onCancel, onDelete, initialDate, initialData,
     }
     const [date, setDate] = useState(parsedDate);
 
-    const [allCats, setAllCats] = useState([...defaultCategories]);
+    const [allCats, setAllCats] = useState(() => {
+        const catMap = new Map();
+        [...defaultCategories, ...customCategories].forEach(c => catMap.set(c.id, c));
+        return Array.from(catMap.values());
+    });
     const currentCats = allCats.filter(c => c.type === formType);
     const [selectedCat, setSelectedCat] = useState(currentCats[0]);
 

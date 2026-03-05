@@ -172,7 +172,7 @@ function App() {
   };
 
   const clearData = async () => {
-    if (window.confirm("Xóa HẾT dữ liệu của anh trên mây? Thao tác này không thể hoàn tác!")) {
+    if (window.confirm(`Xóa HẾT dữ liệu của tài khoản "${displayName}" trên mây? Thao tác này KHÔNG ảnh hưởng đến người khác, nhưng KHÔNG THỂ hoàn tác cho bạn!`)) {
       const q = query(collection(db, "transactions"), where("userId", "==", loginID));
       const snapshot = await getDocs(q);
       const batch = snapshot.docs.map(doc => deleteDoc(doc.ref));
@@ -232,6 +232,21 @@ function App() {
     return acc;
   }, {});
   const sortedCats = Object.values(catSummary).sort((a, b) => b.amount - a.amount);
+
+  // Extract custom categories from user's transactions
+  const userCustomCategories = useMemo(() => {
+    const catsMap = new Map();
+    transactions.forEach(t => {
+      if (t.customCategories && Array.isArray(t.customCategories)) {
+        t.customCategories.forEach(c => {
+          if (!catsMap.has(c.id)) {
+            catsMap.set(c.id, c);
+          }
+        });
+      }
+    });
+    return Array.from(catsMap.values());
+  }, [transactions]);
 
   const historicalData = useMemo(() => {
     if (!selectedGroupForChart) return [];
@@ -482,7 +497,7 @@ function App() {
                   <div className="info-box clickable" onClick={() => setShowChangelog(true)}>
                     <div className="row-between">
                       <span>Nhật ký cập nhật</span>
-                      <span className="badge">v6.2 ›</span>
+                      <span className="badge">v6.5 ›</span>
                     </div>
                   </div>
                   <div className="info-box">
@@ -492,7 +507,7 @@ function App() {
 
                 <div className="section">
                   <h3>Dữ liệu mây</h3>
-                  <button className="btn-danger-lite" onClick={clearData}>Xóa toàn bộ dữ liệu trên Cloud</button>
+                  <button className="btn-danger-lite" onClick={clearData}>Xóa dữ liệu đám mây của tôi</button>
                 </div>
               </>
             )}
@@ -524,6 +539,7 @@ function App() {
 
       {showForm && (
         <TransactionForm
+          customCategories={userCustomCategories}
           initialData={editTransaction}
           initialDate={formInitialDate}
           onSave={handleSaveTransaction}
