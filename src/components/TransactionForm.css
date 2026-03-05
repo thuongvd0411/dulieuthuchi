@@ -327,6 +327,7 @@
 
 .keypad-grid button {
     background-color: white;
+    color: #333;
     border: none;
     padding: 1rem;
     font-size: 1.4rem;
@@ -336,16 +337,17 @@
 .keypad-grid button:active {
     background-color: #F0F0F0;
 }
+
 /* Mobile responsive fixes */
 @media (max-width: 380px) {
     .category-grid {
         grid-template-columns: repeat(3, 1fr);
     }
-    
+
     .amount-val-large {
         font-size: 1.7rem;
     }
-    
+
     .keypad-grid button {
         padding: 0.75rem;
         font-size: 1.2rem;
