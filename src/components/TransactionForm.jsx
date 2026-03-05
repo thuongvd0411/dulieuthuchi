@@ -74,15 +74,18 @@ function TransactionForm({ onSave, onCancel, onDelete, initialDate, initialData,
         setSelectedCat(foundCat);
     }, [formType, allCats]);
 
-    const handleKeyPress = (num) => {
-        if (amount === '0') setAmount(num);
-        else setAmount(prev => prev + num);
-    };
+    useEffect(() => {
+        const typeCats = allCats.filter(c => c.type === formType);
 
-    const handleBackspace = () => {
-        if (amount.length <= 1) setAmount('0');
-        else setAmount(prev => prev.slice(0, -1));
-    };
+        let foundCat = typeCats[0];
+        if (initialData && initialData.type === formType) {
+            foundCat = typeCats.find(c => c.name === initialData.category) || typeCats[0];
+        } else if (selectedCat && selectedCat.type === formType) {
+            foundCat = typeCats.find(c => c.id === selectedCat.id) || typeCats[0];
+        }
+
+        setSelectedCat(foundCat);
+    }, [formType, allCats]);
 
     const handleAddCategory = () => {
         if (!newCatName.trim()) return;
@@ -132,21 +135,26 @@ function TransactionForm({ onSave, onCancel, onDelete, initialDate, initialData,
                 </div>
 
                 <div className="form-body-scroll">
-                    <div className="input-row amount-row-large">
-                        <div className="amount-label">Số tiền</div>
-                        <div className="amount-val-large">
-                            {Number(amount).toLocaleString()} <span className="currency">đ</span>
-                        </div>
-                    </div>
-
-                    <div className="input-row-flex">
-                        <div className="field">
+                    <div className="input-group-top">
+                        <div className="field-row">
                             <label>Ngày</label>
                             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                         </div>
-                        <div className="field">
+                        <div className="field-row">
                             <label>Ghi chú</label>
-                            <input type="text" placeholder="Ăn trưa, xăng xe..." value={note} onChange={(e) => setNote(e.target.value)} />
+                            <input type="text" placeholder="Thêm ghi chú" value={note} onChange={(e) => setNote(e.target.value)} />
+                        </div>
+                        <div className="field-row amount-row">
+                            <label>Tiền {formType === 'expense' ? 'chi' : 'thu'}</label>
+                            <div className="amount-input-wrapper">
+                                <input type="number"
+                                    className="amount-input-native"
+                                    value={amount === '0' ? '' : amount}
+                                    onChange={(e) => setAmount(e.target.value || '0')}
+                                    placeholder="0"
+                                />
+                                <span className="currency-symbol">đ</span>
+                            </div>
                         </div>
                     </div>
 
@@ -200,16 +208,10 @@ function TransactionForm({ onSave, onCancel, onDelete, initialDate, initialData,
                     </div>
                 </div>
 
-                <div className="keypad-section">
+                <div className="bottom-action-bar">
                     <button className="main-action-btn" onClick={handleSave}>
                         Nhập khoản {formType === 'expense' ? 'chi' : 'thu'}
                     </button>
-                    <div className="keypad-grid">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, '00', 0].map(k => (
-                            <button key={k} onClick={() => handleKeyPress(k.toString())}>{k}</button>
-                        ))}
-                        <button key="back" onClick={handleBackspace}>⌫</button>
-                    </div>
                 </div>
             </div>
         </div>

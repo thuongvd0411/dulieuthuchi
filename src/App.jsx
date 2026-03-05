@@ -249,6 +249,22 @@ function App() {
     return { data: result, max: maxHistoricalAmount };
   }, [transactions, selectedGroupForChart, currentMonth, currentYear]);
 
+  // Compute conic-gradient for the donut chart
+  const getDonutStyle = () => {
+    if (totalExpense === 0 || sortedCats.length === 0) return { background: '#eee' };
+
+    let currentAngle = 0;
+    const gradients = sortedCats.map(cat => {
+      const percentage = (cat.amount / totalExpense) * 100;
+      const start = currentAngle;
+      const end = currentAngle + percentage;
+      currentAngle += percentage;
+      return `${cat.color} ${start}% ${end}%`;
+    });
+
+    return { background: `conic-gradient(${gradients.join(', ')})` };
+  };
+
   return (
     <div className="container">
       {/* Header & Month Picker as before */}
@@ -384,12 +400,11 @@ function App() {
             ) : (
               <>
                 <div className="donut-section">
-                  <div className="donut-chart-complex">
+                  <div className="donut-chart-complex" style={getDonutStyle()}>
                     <div className="inner-label">
                       <small>Chi tiêu</small>
                       <strong>{totalExpense.toLocaleString()}</strong>
                     </div>
-                    <div className="donut-segments"></div>
                   </div>
                 </div>
                 <div className="report-cat-list">
