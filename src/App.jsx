@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './App.css';
 import { db } from './firebase';
-import { collection, query, onSnapshot, addDoc, serverTimestamp, where, deleteDoc, getDocs } from 'firebase/firestore';
+import { collection, query, onSnapshot, addDoc, serverTimestamp, where, deleteDoc, getDocs, doc, updateDoc } from 'firebase/firestore';
 import TransactionForm from './components/TransactionForm';
 import Auth from './components/Auth';
 
@@ -81,7 +81,9 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formInitialDate, setFormInitialDate] = useState(null);
+  const [editTransaction, setEditTransaction] = useState(null);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [selectedGroupForChart, setSelectedGroupForChart] = useState(null);
 
   // Date selection state
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -140,6 +142,7 @@ function App() {
   const changeMonth = (offset) => {
     const nextDate = new Date(currentYear, currentMonth + offset, 1);
     setSelectedDate(nextDate);
+    setSelectedGroupForChart(null);
   };
 
   const handleOpenForm = (dateStr = null) => {
@@ -148,6 +151,12 @@ function App() {
       dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
     setFormInitialDate(dateStr);
+    setEditTransaction(null);
+    setShowForm(true);
+  };
+
+  const handleOpenEditForm = (transaction) => {
+    setEditTransaction(transaction);
     setShowForm(true);
   };
 
@@ -163,15 +172,37 @@ function App() {
 
   const handleSaveTransaction = async (data) => {
     try {
-      await addDoc(collection(db, "transactions"), {
-        ...data,
-        userId: loginID,
-        createdAt: serverTimestamp()
-      });
+      if (data.id) {
+        // Update existing
+        const docRef = doc(db, "transactions", data.id);
+        const { id, ...updateData } = data;
+        await updateDoc(docRef, updateData);
+      } else {
+        // Add new
+        await addDoc(collection(db, "transactions"), {
+          ...data,
+          userId: loginID,
+          createdAt: serverTimestamp()
+        });
+      }
       setShowForm(false);
+      setEditTransaction(null);
     } catch (error) {
       console.error("Error: ", error);
       alert("Lỗi lưu dữ liệu: " + error.message);
+    }
+  };
+
+  const handleDeleteTransaction = async (id) => {
+    if (window.confirm("Anh có chắc chắn muốn xóa giao dịch này không?")) {
+      try {
+        await deleteDoc(doc(db, "transactions", id));
+        setShowForm(false);
+        setEditTransaction(null);
+      } catch (error) {
+        console.error("Error deleting document: ", error);
+        alert("Lỗi xóa dữ liệu: " + error.message);
+      }
     }
   };
 
@@ -182,13 +213,41 @@ function App() {
   const totalExpense = filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
   const catSummary = filteredTransactions.filter(t => t.type === 'expense').reduce((acc, t) => {
-    if (!acc[t.category]) {
-      acc[t.category] = { amount: 0, icon: t.icon, color: t.color, name: t.category };
+    const groupName = t.group || t.category;
+    if (!acc[groupName]) {
+      acc[groupName] = { amount: 0, icon: t.icon, color: t.color, name: groupName };
     }
-    acc[t.category].amount += t.amount;
+    acc[groupName].amount += t.amount;
     return acc;
   }, {});
   const sortedCats = Object.values(catSummary).sort((a, b) => b.amount - a.amount);
+
+  const historicalData = useMemo(() => {
+    if (!selectedGroupForChart) return [];
+
+    const result = [];
+    let maxHistoricalAmount = 0;
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(currentYear, currentMonth - i, 1);
+      const m = d.getMonth();
+      const y = d.getFullYear();
+
+      const amount = transactions.filter(t =>
+        t.type === 'expense' &&
+        (t.group === selectedGroupForChart || (!t.group && t.category === selectedGroupForChart)) &&
+        t.date.getMonth() === m &&
+        t.date.getFullYear() === y
+      ).reduce((sum, t) => sum + t.amount, 0);
+
+      if (amount > maxHistoricalAmount) maxHistoricalAmount = amount;
+
+      result.push({
+        label: `${m + 1}/${y.toString().slice(-2)}`,
+        amount
+      });
+    }
+    return { data: result, max: maxHistoricalAmount };
+  }, [transactions, selectedGroupForChart, currentMonth, currentYear]);
 
   return (
     <div className="container">
@@ -255,7 +314,7 @@ function App() {
                     </div>
                   </div>
                   {filteredTransactions.filter(t => t.date.toLocaleDateString('vi-VN') === dateStr).map(t => (
-                    <div key={t.id} className="transaction-item-modern">
+                    <div key={t.id} className="transaction-item-modern" onClick={() => handleOpenEditForm(t)} style={{ cursor: 'pointer' }}>
                       <div className="cat-icon-wrap" style={{ backgroundColor: t.color + '15', color: t.color }}>{t.icon}</div>
                       <div className="trans-body">
                         <div className="top">
@@ -301,29 +360,55 @@ function App() {
 
         {activeTab === 'report' && (
           <div className="report-view-modern">
-            <div className="donut-section">
-              <div className="donut-chart-complex">
-                <div className="inner-label">
-                  <small>Chi tiêu</small>
-                  <strong>{totalExpense.toLocaleString()}</strong>
+            {selectedGroupForChart ? (
+              <div className="historical-chart-container">
+                <div className="historical-header">
+                  <button className="back-btn" onClick={() => setSelectedGroupForChart(null)}>‹ Quay lại</button>
+                  <h3>Thống kê 6 tháng: {selectedGroupForChart}</h3>
                 </div>
-                <div className="donut-segments"></div>
+                <div className="bar-chart-card">
+                  <div className="bar-chart-wrapper">
+                    {historicalData.data.map((item, idx) => {
+                      const heightPc = historicalData.max === 0 ? 0 : Math.max(5, (item.amount / historicalData.max) * 100);
+                      return (
+                        <div key={idx} className="bar-column">
+                          <span className="bar-val">{item.amount > 0 ? (item.amount / 1000).toLocaleString() + 'k' : ''}</span>
+                          <div className="bar-fill" style={{ height: `${heightPc}%`, backgroundColor: idx === 5 ? 'var(--primary-color)' : '#FFCC80' }}></div>
+                          <span className="bar-label">{item.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="report-cat-list">
-              {sortedCats.map(cat => (
-                <div key={cat.name} className="report-cat-item">
-                  <div className="cat-icon-sm" style={{ backgroundColor: cat.color + '15' }}>{cat.icon}</div>
-                  <div className="cat-name-wrap">
-                    <span className="name">{cat.name}</span>
-                    <span className="percent">{Math.round((cat.amount / totalExpense) * 100)}%</span>
-                  </div>
-                  <div className="cat-amount-wrap">
-                    <span className="val">{cat.amount.toLocaleString()}đ</span>
+            ) : (
+              <>
+                <div className="donut-section">
+                  <div className="donut-chart-complex">
+                    <div className="inner-label">
+                      <small>Chi tiêu</small>
+                      <strong>{totalExpense.toLocaleString()}</strong>
+                    </div>
+                    <div className="donut-segments"></div>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="report-cat-list">
+                  {sortedCats.map(cat => (
+                    <div key={cat.name} className="report-cat-item" onClick={() => setSelectedGroupForChart(cat.name)} style={{ cursor: 'pointer' }}>
+                      <div className="cat-icon-sm" style={{ backgroundColor: cat.color + '15' }}>{cat.icon}</div>
+                      <div className="cat-name-wrap">
+                        <span className="name">{cat.name}</span>
+                        <span className="percent">{Math.round((cat.amount / totalExpense) * 100)}%</span>
+                      </div>
+                      <div className="cat-amount-wrap">
+                        <span className="val">{cat.amount.toLocaleString()}đ</span>
+                        <span className="chev">›</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -395,7 +480,7 @@ function App() {
         <div className="nav-item fab-center" onClick={() => handleOpenForm()}>
           <div className="plus-icon">+</div>
         </div>
-        <div className={`nav-item ${activeTab === 'report' ? 'active' : ''}`} onClick={() => { setActiveTab('report'); setShowChangelog(false); }}>
+        <div className={`nav-item ${activeTab === 'report' ? 'active' : ''}`} onClick={() => { setActiveTab('report'); setShowChangelog(false); setSelectedGroupForChart(null); }}>
           <span className="icon">📊</span>
           <span className="label">Báo cáo</span>
         </div>
@@ -407,9 +492,11 @@ function App() {
 
       {showForm && (
         <TransactionForm
+          initialData={editTransaction}
           initialDate={formInitialDate}
           onSave={handleSaveTransaction}
-          onCancel={() => setShowForm(false)}
+          onDelete={handleDeleteTransaction}
+          onCancel={() => { setShowForm(false); setEditTransaction(null); }}
         />
       )}
     </div>

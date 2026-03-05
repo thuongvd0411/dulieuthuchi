@@ -120,7 +120,8 @@
 }
 
 .date-input,
-.note-input {
+.note-input,
+.field input {
     border: none;
     background: #F9F9F9;
     padding: 8px 12px;
@@ -129,6 +130,7 @@
     font-size: 0.95rem;
     text-align: right;
     outline: none;
+    color: #333;
 }
 
 /* Updated Amount Row to match JSX */

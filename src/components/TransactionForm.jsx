@@ -25,7 +25,8 @@ const defaultCategories = [
 
     { id: 'dc1', name: 'Mua đồ chơi', icon: '🎮', type: 'expense', color: '#FFEB3B', group: 'Đồ chơi' },
     { id: 'dc2', name: 'Đi chơi', icon: '🎢', type: 'expense', color: '#00BCD4', group: 'Đồ chơi' },
-    { id: 'dc3', name: 'Khác (Đồ chơi)', icon: '🧩', type: 'expense', color: '#9E9E9E', group: 'Đồ chơi' },
+    { id: 'dc3', name: 'Game', icon: '🕹️', type: 'expense', color: '#9C27B0', group: 'Đồ chơi' },
+    { id: 'dc4', name: 'Khác (Đồ chơi)', icon: '🧩', type: 'expense', color: '#9E9E9E', group: 'Đồ chơi' },
 
     { id: 'gd1', name: 'Mua đồ gia đình', icon: '🛒', type: 'expense', color: '#E91E63', group: 'Mua sắm & Phát sinh' },
     { id: 'ps1', name: 'Phát sinh', icon: '⚠️', type: 'expense', color: '#FF5722', group: 'Mua sắm & Phát sinh' },
@@ -40,11 +41,18 @@ const defaultCategories = [
     { id: 'inc4', name: 'Tiền hoàn trả', icon: '↩️', type: 'income', color: '#8BC34A', group: 'Thu nhập khác' }
 ];
 
-function TransactionForm({ onSave, onCancel, initialDate, customCategories = [] }) {
-    const [formType, setFormType] = useState('expense'); // expense or income
-    const [amount, setAmount] = useState('0');
-    const [note, setNote] = useState('');
-    const [date, setDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
+function TransactionForm({ onSave, onCancel, onDelete, initialDate, initialData, customCategories = [] }) {
+    const [formType, setFormType] = useState(initialData ? initialData.type : 'expense');
+    const [amount, setAmount] = useState(initialData ? initialData.amount.toString() : '0');
+    const [note, setNote] = useState(initialData ? (initialData.note || '') : '');
+
+    // Parse initial date from string or Firestore timestamp/Date
+    let parsedDate = initialDate || new Date().toISOString().split('T')[0];
+    if (initialData && initialData.date) {
+        const d = initialData.date instanceof Date ? initialData.date : new Date(initialData.date);
+        parsedDate = d.toISOString().split('T')[0];
+    }
+    const [date, setDate] = useState(parsedDate);
 
     const [allCats, setAllCats] = useState([...defaultCategories]);
     const currentCats = allCats.filter(c => c.type === formType);
@@ -54,7 +62,16 @@ function TransactionForm({ onSave, onCancel, initialDate, customCategories = [] 
     const [newCatName, setNewCatName] = useState('');
 
     useEffect(() => {
-        setSelectedCat(allCats.find(c => c.type === formType));
+        const typeCats = allCats.filter(c => c.type === formType);
+
+        let foundCat = typeCats[0];
+        if (initialData && initialData.type === formType) {
+            foundCat = typeCats.find(c => c.name === initialData.category) || typeCats[0];
+        } else if (selectedCat && selectedCat.type === formType) {
+            foundCat = typeCats.find(c => c.id === selectedCat.id) || typeCats[0];
+        }
+
+        setSelectedCat(foundCat);
     }, [formType, allCats]);
 
     const handleKeyPress = (num) => {
@@ -85,10 +102,12 @@ function TransactionForm({ onSave, onCancel, initialDate, customCategories = [] 
     const handleSave = () => {
         if (Number(amount) === 0) return;
         onSave({
+            ...(initialData ? { id: initialData.id } : {}),
             amount: Number(amount),
             category: selectedCat?.name || 'Khác',
             icon: selectedCat?.icon || '💰',
             color: selectedCat?.color || '#999',
+            group: selectedCat?.group || (formType === 'income' ? 'Khác (Thu)' : 'Khác (Chi)'),
             type: formType,
             note,
             date: new Date(date),
@@ -101,8 +120,10 @@ function TransactionForm({ onSave, onCancel, initialDate, customCategories = [] 
             <div className="form-container">
                 <div className="form-header-simple">
                     <button className="back-home-btn" onClick={onCancel}>✕ Thoát</button>
-                    <h2>{formType === 'expense' ? 'Ghi khoản chi' : 'Ghi khoản thu'}</h2>
-                    <span></span>
+                    <h2>{initialData ? 'Sửa giao dịch' : (formType === 'expense' ? 'Ghi khoản chi' : 'Ghi khoản thu')}</h2>
+                    {initialData && onDelete ? (
+                        <button className="del-btn" style={{ position: 'absolute', right: '1rem', background: 'none', border: 'none', color: '#D32F2F', fontWeight: 'bold' }} onClick={() => onDelete(initialData.id)}>Xóa</button>
+                    ) : <span></span>}
                 </div>
 
                 <div className="form-tabs-top">
