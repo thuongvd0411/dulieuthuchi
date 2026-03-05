@@ -80,6 +80,7 @@ function App() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [formInitialDate, setFormInitialDate] = useState(null);
   const [showChangelog, setShowChangelog] = useState(false);
 
   // Date selection state
@@ -139,6 +140,15 @@ function App() {
   const changeMonth = (offset) => {
     const nextDate = new Date(currentYear, currentMonth + offset, 1);
     setSelectedDate(nextDate);
+  };
+
+  const handleOpenForm = (dateStr = null) => {
+    if (!dateStr) {
+      const today = new Date();
+      dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    }
+    setFormInitialDate(dateStr);
+    setShowForm(true);
   };
 
   const clearData = async () => {
@@ -273,7 +283,10 @@ function App() {
                 const income = dayTrans.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
                 const expense = dayTrans.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
                 return (
-                  <div key={d} className={`cal-day ${income || expense ? 'has-data' : ''}`}>
+                  <div key={d} className={`cal-day ${income || expense ? 'has-data' : ''}`} onClick={() => {
+                    const dStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    handleOpenForm(dStr);
+                  }}>
                     <span className="day-num">{d}</span>
                     <div className="day-amounts">
                       {income > 0 && <span className="pos">+{Math.round(income / 1000)}k</span>}
@@ -379,7 +392,7 @@ function App() {
           <span className="icon">📅</span>
           <span className="label">Lịch</span>
         </div>
-        <div className="nav-item fab-center" onClick={() => setShowForm(true)}>
+        <div className="nav-item fab-center" onClick={() => handleOpenForm()}>
           <div className="plus-icon">+</div>
         </div>
         <div className={`nav-item ${activeTab === 'report' ? 'active' : ''}`} onClick={() => { setActiveTab('report'); setShowChangelog(false); }}>
@@ -394,6 +407,7 @@ function App() {
 
       {showForm && (
         <TransactionForm
+          initialDate={formInitialDate}
           onSave={handleSaveTransaction}
           onCancel={() => setShowForm(false)}
         />

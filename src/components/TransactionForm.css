@@ -253,6 +253,24 @@
     color: #666;
 }
 
+.category-groups-scroll {
+    display: flex;
+    flex-direction: column;
+}
+
+.cat-group-wrapper {
+    margin-bottom: 1rem;
+}
+
+.cat-group-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed #FFE0B2;
+}
+
 .category-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);

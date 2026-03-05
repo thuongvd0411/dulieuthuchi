@@ -2,25 +2,49 @@ import React, { useState, useEffect } from 'react';
 import './TransactionForm.css';
 
 const defaultCategories = [
-    { id: 'cat1', name: 'Ăn uống', icon: '🍲', type: 'expense', color: '#FF9800' },
-    { id: 'cat2', name: 'Chi tiêu hàng ngày', icon: '🛍️', type: 'expense', color: '#4CAF50' },
-    { id: 'cat3', name: 'Quần áo', icon: '👕', type: 'expense', color: '#2196F3' },
-    { id: 'cat4', name: 'Mỹ phẩm', icon: '💄', type: 'expense', color: '#E91E63' },
-    { id: 'cat5', name: 'Y tế', icon: '💊', type: 'expense', color: '#F44336' },
-    { id: 'cat6', name: 'Giáo dục', icon: '📚', type: 'expense', color: '#9C27B0' },
-    { id: 'cat7', name: 'Điện nước', icon: '💡', type: 'expense', color: '#FFEB3B' },
-    { id: 'cat8', name: 'Đi lại', icon: '🚗', type: 'expense', color: '#795548' },
-    { id: 'cat9', name: 'Liên lạc', icon: '📱', type: 'expense', color: '#607D8B' },
-    { id: 'cat10', name: 'Tiền nhà', icon: '🏠', type: 'expense', color: '#3F51B5' },
-    { id: 'inc1', name: 'Lương', icon: '💵', type: 'income', color: '#4CAF50' },
-    { id: 'inc2', name: 'Thưởng', icon: '🧧', type: 'income', color: '#FFC107' },
+    // --- Khoản chi ---
+    { id: 'cd1', name: 'Điện', icon: '⚡', type: 'expense', color: '#FF9800', group: 'Cố định' },
+    { id: 'cd2', name: 'Mạng', icon: '🌐', type: 'expense', color: '#2196F3', group: 'Cố định' },
+    { id: 'cd3', name: 'Gia đình', icon: '🏠', type: 'expense', color: '#4CAF50', group: 'Cố định' },
+    { id: 'cd4', name: 'Khác (Cố định)', icon: '📦', type: 'expense', color: '#9E9E9E', group: 'Cố định' },
+
+    { id: 'cv1', name: 'Xăng xe', icon: '⛽', type: 'expense', color: '#607D8B', group: 'Công việc' },
+    { id: 'cv2', name: 'Mua bán', icon: '🤝', type: 'expense', color: '#795548', group: 'Công việc' },
+    { id: 'cv3', name: 'Khác (Công việc)', icon: '💼', type: 'expense', color: '#9E9E9E', group: 'Công việc' },
+
+    { id: 'bt1', name: 'Ăn uống', icon: '🍲', type: 'expense', color: '#FF5722', group: 'Bản thân' },
+    { id: 'bt2', name: 'PT bản thân', icon: '📚', type: 'expense', color: '#9C27B0', group: 'Bản thân' },
+    { id: 'bt3', name: 'Trả nợ', icon: '💸', type: 'expense', color: '#F44336', group: 'Bản thân' },
+    { id: 'bt4', name: 'Lỗ đầu cơ', icon: '📉', type: 'expense', color: '#E91E63', group: 'Bản thân' },
+    { id: 'bt5', name: 'Khác (Bản thân)', icon: '👤', type: 'expense', color: '#9E9E9E', group: 'Bản thân' },
+
+    { id: 'ba1', name: 'Học phí', icon: '🎓', type: 'expense', color: '#03A9F4', group: 'Be và An' },
+    { id: 'ba2', name: 'Sữa bỉm', icon: '🍼', type: 'expense', color: '#FFEB3B', group: 'Be và An' },
+    { id: 'ba3', name: 'Phát sinh (B&A)', icon: '🧸', type: 'expense', color: '#8BC34A', group: 'Be và An' },
+    { id: 'ba4', name: 'Khác (B&A)', icon: '👦', type: 'expense', color: '#9E9E9E', group: 'Be và An' },
+
+    { id: 'dc1', name: 'Mua đồ chơi', icon: '🎮', type: 'expense', color: '#FFEB3B', group: 'Đồ chơi' },
+    { id: 'dc2', name: 'Đi chơi', icon: '🎢', type: 'expense', color: '#00BCD4', group: 'Đồ chơi' },
+    { id: 'dc3', name: 'Khác (Đồ chơi)', icon: '🧩', type: 'expense', color: '#9E9E9E', group: 'Đồ chơi' },
+
+    { id: 'gd1', name: 'Mua đồ gia đình', icon: '🛒', type: 'expense', color: '#E91E63', group: 'Mua sắm & Phát sinh' },
+    { id: 'ps1', name: 'Phát sinh', icon: '⚠️', type: 'expense', color: '#FF5722', group: 'Mua sắm & Phát sinh' },
+
+    { id: 'v1', name: 'Đồ cho vợ', icon: '👗', type: 'expense', color: '#E91E63', group: 'Vợ' },
+    { id: 'v2', name: 'Khác (Vợ)', icon: '👩', type: 'expense', color: '#9E9E9E', group: 'Vợ' },
+
+    // --- Khoản thu ---
+    { id: 'inc1', name: 'Lương', icon: '💵', type: 'income', color: '#4CAF50', group: 'Lương' },
+    { id: 'inc2', name: 'Thu nhận', icon: '🎁', type: 'income', color: '#00BCD4', group: 'Thu nhập khác' },
+    { id: 'inc3', name: 'Lãi đầu cơ', icon: '📈', type: 'income', color: '#FF9800', group: 'Thu nhập khác' },
+    { id: 'inc4', name: 'Tiền hoàn trả', icon: '↩️', type: 'income', color: '#8BC34A', group: 'Thu nhập khác' }
 ];
 
-function TransactionForm({ onSave, onCancel, customCategories = [] }) {
+function TransactionForm({ onSave, onCancel, initialDate, customCategories = [] }) {
     const [formType, setFormType] = useState('expense'); // expense or income
     const [amount, setAmount] = useState('0');
     const [note, setNote] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
 
     const [allCats, setAllCats] = useState([...defaultCategories]);
     const currentCats = allCats.filter(c => c.type === formType);
@@ -50,7 +74,8 @@ function TransactionForm({ onSave, onCancel, customCategories = [] }) {
             name: newCatName,
             icon: '✨',
             type: formType,
-            color: formType === 'expense' ? '#FF9800' : '#4CAF50'
+            color: formType === 'expense' ? '#FF9800' : '#4CAF50',
+            group: formType === 'income' ? 'Lương' : 'Khác' // Map to Luong group for income 
         };
         setAllCats(prev => [...prev, newCat]);
         setNewCatName('');
@@ -123,17 +148,31 @@ function TransactionForm({ onSave, onCancel, customCategories = [] }) {
                             </div>
                         )}
 
-                        <div className="category-grid">
-                            {currentCats.map(cat => (
-                                <div
-                                    key={cat.id}
-                                    className={`cat-btn ${selectedCat?.id === cat.id ? 'active' : ''}`}
-                                    onClick={() => setSelectedCat(cat)}
-                                >
-                                    <div className="cat-icon-wrap" style={{ backgroundColor: selectedCat?.id === cat.id ? cat.color : '#F5F5F5' }}>
-                                        <span className="icon">{cat.icon}</span>
+                        <div className="category-groups-scroll">
+                            {Object.entries(
+                                currentCats.reduce((acc, cat) => {
+                                    const key = cat.group || 'Khác';
+                                    if (!acc[key]) acc[key] = [];
+                                    acc[key].push(cat);
+                                    return acc;
+                                }, {})
+                            ).map(([groupName, cats]) => (
+                                <div key={groupName} className="cat-group-wrapper">
+                                    <div className="cat-group-title">{groupName}</div>
+                                    <div className="category-grid">
+                                        {cats.map(cat => (
+                                            <div
+                                                key={cat.id}
+                                                className={`cat-btn ${selectedCat?.id === cat.id ? 'active' : ''}`}
+                                                onClick={() => setSelectedCat(cat)}
+                                            >
+                                                <div className="cat-icon-wrap" style={{ backgroundColor: selectedCat?.id === cat.id ? cat.color : '#F5F5F5' }}>
+                                                    <span className="icon">{cat.icon}</span>
+                                                </div>
+                                                <span className="name">{cat.name}</span>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <span className="name">{cat.name}</span>
                                 </div>
                             ))}
                         </div>
