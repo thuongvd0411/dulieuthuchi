@@ -206,11 +206,18 @@
     /* Reduced */
 }
 
-.bottom-action-bar {
-    padding: 1rem;
-    background: white;
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
-    z-index: 10;
+.inline-action-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(255, 152, 0, 0.2);
+    margin-left: 8px;
+    white-space: nowrap;
 }
 
 

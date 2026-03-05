@@ -155,6 +155,9 @@ function TransactionForm({ onSave, onCancel, onDelete, initialDate, initialData,
                                 />
                                 <span className="currency-symbol">đ</span>
                             </div>
+                            <button className="inline-action-btn" onClick={handleSave}>
+                                Nhập
+                            </button>
                         </div>
                     </div>
 
@@ -208,11 +211,6 @@ function TransactionForm({ onSave, onCancel, onDelete, initialDate, initialData,
                     </div>
                 </div>
 
-                <div className="bottom-action-bar">
-                    <button className="main-action-btn" onClick={handleSave}>
-                        Nhập khoản {formType === 'expense' ? 'chi' : 'thu'}
-                    </button>
-                </div>
             </div>
         </div>
     );

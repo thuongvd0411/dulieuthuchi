@@ -7,6 +7,17 @@ import Auth from './components/Auth';
 
 const CHANGELOG = [
   {
+    version: 'v6.5',
+    date: '05/03/2026',
+    title: 'Tinh tế Hóa luồng Nhập liệu',
+    updates: [
+      'Gắn cố định Menu điều hướng ở cạnh dưới màn hình.',
+      'Đưa Nút Lưu/Nhập ngang hàng với số tiền để tiết kiệm không gian.',
+      'Sửa lỗi tràn bàn phím mặc định và tối ưu kích thước form.',
+      'Biểu đồ tròn thêm ghi chú tỷ lệ % chi tiết đính kèm.'
+    ]
+  },
+  {
     version: 'v6.2',
     date: '02/03/2026',
     title: 'Đại tu Giao diện Di động',
